@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Classifier Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base styles for the body */
+        body {
+            font-family: 'Inter', sans-serif; /* Use Inter font */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Full viewport height */
+            margin: 0;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            color: #2d3748; /* Dark text text */
+            overflow-x: hidden; /* Prevent horizontal scrolling */
+        }
+
+        /* Main container for the game */
+        .game-container {
+            background-color: #ffffff;
+            padding: 2.5rem; /* 40px */
+            border-radius: 1rem; /* 16px rounded corners */
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); /* Soft shadow */
+            text-align: center;
+            max-width: 95%; /* Responsive max width */
+            width: 900px; /* Fixed width for larger screens */
+            display: flex;
+            flex-direction: column;
+            gap: 2rem; /* Spacing between sections */
+        }
+
+        /* Heading style */
+        h1 {
+            color: #4299e1; /* Blue heading */
+            font-size: 2.25rem; /* 36px */
+            font-weight: 700; /* Bold */
+            margin-bottom: 1.5rem; /* 24px */
+        }
+
+        /* Container for draggable animal images */
+        .animal-shelf {
+            display: flex;
+            flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+            justify-content: center; /* Center items */
+            gap: 1.5rem; /* Spacing between items */
+            padding: 1rem; /* 16px padding */
+            background-color: #e2e8f0; /* Lighter blue-gray background */
+            border-radius: 0.75rem; /* 12px rounded corners */
+            border: 1px solid #cbd5e0; /* Light border */
+        }
+
+        /* Styles for individual draggable text elements */
+        .animal-shelf .draggable-text {
+            width: 120px; /* Fixed width */
+            height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #63b3ed; /* Blue background for text */
+            color: #ffffff; /* White text */
+            font-size: 1.5rem; /* Larger font for text */
+            font-weight: 600;
+            border-radius: 0.5rem; /* 8px rounded corners */
+            cursor: grab; /* Indicate draggable */
+            border: 3px solid transparent; /* Transparent border for hover effect */
+            transition: transform 0.2s ease-in-out, border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Initial shadow */
+        }
+
+        /* Hover effect for draggable text elements */
+        .animal-shelf .draggable-text:hover {
+            transform: translateY(-8px) scale(1.05); /* Lift and slightly enlarge */
+            border-color: #3182ce; /* Darker blue border on hover */
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15); /* More pronounced shadow */
+            background-color: #4299e1; /* Slightly darker blue on hover */
+        }
+
+        /* Dragging effect for draggable text elements */
+        .animal-shelf .draggable-text:active {
+            cursor: grabbing;
+            transform: scale(0.98); /* Slightly shrink when active */
+        }
+
+        /* Neural network diagram layout */
+        .neural-network-diagram {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start; /* Align items to the top */
+            gap: 1rem;
+            margin-top: 2rem;
+            background-color: #f7fafc; /* Very light background for the diagram area */
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); /* Inner shadow */
+            position: relative; /* Needed for absolute positioning of SVG arrows */
+        }
+
+        /* SVG for arrows */
+        #flow-arrows {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Allows clicks to pass through to elements below */
+            z-index: 1; /* Ensure arrows are behind interactive elements */
+        }
+
+        #flow-arrows line {
+            stroke: #a0aec0; /* Default arrow color */
+            stroke-width: 2;
+            transition: stroke 0.3s ease, filter 0.3s ease, stroke-width 0.3s ease;
+        }
+
+        /* Arrowhead marker style */
+        #arrowhead {
+            fill: #a0aec0; /* Default arrowhead color */
+            transition: fill 0.3s ease;
+        }
+
+        /* Individual layers */
+        .input-layer, .hidden-layer, .output-layer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            z-index: 2; /* Ensure layers are above arrows */
+        }
+
+        .input-layer {
+            background-color: #fffbeb; /* Light yellow background */
+            border: 1px solid #fbd38d;
+            flex: 0 0 auto; /* Don't grow or shrink, base on content */
+            width: 200px; /* Fixed width for input layer */
+        }
+
+        .hidden-layer {
+            background-color: #ebf8ff; /* Light blue background */
+            border: 1px solid #90cdf4;
+            flex: 1; /* Allow to grow */
+            min-width: 200px;
+        }
+
+        .output-layer {
+            background-color: #f0fff4; /* Light green background */
+            border: 1px solid #9ae6b4;
+            flex: 0 0 auto; /* Don't grow or shrink, base on content */
+            width: 150px; /* Fixed width for output layer */
+        }
+
+        /* Drop box area */
+        #drop-box {
+            width: 180px; /* Adjusted size for diagram */
+            height: 180px;
+            border: 4px dashed #63b3ed; /* Dashed blue border */
+            border-radius: 1.5rem; /* 24px rounded corners */
+            display: flex;
+            flex-direction: column; /* Allow text to stack */
+            justify-content: center;
+            align-items: center;
+            font-size: 1.1rem; /* Smaller font for diagram */
+            color: #4299e1; /* Blue text */
+            background-color: #ebf8ff; /* Lightest blue background */
+            transition: background-color 0.3s ease-in-out, border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Subtle initial shadow */
+        }
+
+        /* Hover effect for drop box */
+        #drop-box.hover {
+            background-color: #bee3f8; /* Lighter blue on hover */
+            border-color: #3182ce; /* Darker blue border */
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1); /* More pronounced shadow */
+        }
+
+        /* Dropped state for drop box */
+        #drop-box.dropped {
+            border-style: solid; /* Solid border after drop */
+            background-color: #a7d9f8; /* Even lighter blue */
+            color: #2b6cb0; /* Darker blue text */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Styles for question circles in hidden layer */
+        .question-circle {
+            width: 120px; /* Diameter for circle */
+            height: 120px;
+            border-radius: 50%; /* Make it a circle */
+            border: 2px solid #a0aec0; /* Gray border */
+            background-color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 0.9rem;
+            padding: 0.5rem;
+            box-sizing: border-box; /* Include padding in width/height */
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Styles for output boxes */
+        .output-box {
+            width: 100px; /* Width for box */
+            height: 60px; /* Height for box */
+            border-radius: 0.5rem; /* Slightly rounded corners */
+            border: 2px solid #a0aec0; /* Gray border */
+            background-color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Glow effect for active elements (circles and boxes) */
+        .glow-active {
+            box-shadow: 0 0 15px 5px rgba(66, 153, 225, 0.7), /* Blue glow */
+                        0 0 20px 10px rgba(66, 153, 225, 0.5);
+            border-color: #4299e1 !important; /* Stronger blue border */
+            background-color: #e0f2fe !important; /* Lighter background when glowing */
+        }
+
+        /* Specific glow for cat output */
+        #output-cat.glow-active {
+            box-shadow: 0 0 15px 5px rgba(56, 161, 105, 0.7), /* Green glow */
+                        0 0 20px 10px rgba(56, 161, 105, 0.5);
+            border-color: #38a169 !important;
+            background-color: #e6fffa !important;
+        }
+
+        /* Specific glow for cow output */
+        #output-cow.glow-active {
+            box-shadow: 0 0 15px 5px rgba(159, 122, 234, 0.7), /* Purple glow */
+                        0 0 20px 10px rgba(159, 122, 234, 0.5);
+            border-color: #9f7aea !important;
+            background-color: #faf5ff !important;
+        }
+
+        /* Glow effect for active arrows */
+        .glow-active-arrow {
+            stroke: #4299e1 !important; /* Blue stroke for arrows */
+            stroke-width: 3 !important; /* Thicker stroke */
+            filter: drop-shadow(0 0 5px rgba(66, 153, 225, 0.8)); /* Glow effect */
+        }
+        .glow-active-arrow #arrowhead {
+            fill: #4299e1 !important; /* Blue fill for arrowhead */
+        }
+
+        /* Message display area */
+        #message {
+            font-size: 1.8rem; /* 28px */
+            font-weight: 600; /* Semi-bold */
+            min-height: 2rem; /* Reserve space to prevent layout shift */
+            margin-top: 1.5rem; /* 24px */
+            transition: color 0.3s ease-in-out;
+        }
+
+        /* Correct message color */
+        #message.correct {
+            color: #38a169; /* Green */
+        }
+
+        /* Incorrect message color */
+        #message.incorrect {
+            color: #e53e3e; /* Red */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 1.5rem; /* Smaller padding on mobile */
+                gap: 1.5rem;
+            }
+            h1 {
+                font-size: 1.75rem; /* Smaller heading on mobile */
+            }
+            .animal-shelf .draggable-text {
+                width: 100px; /* Smaller items on mobile */
+                height: 100px;
+                font-size: 1.2rem;
+            }
+            .neural-network-diagram {
+                flex-direction: column; /* Stack layers vertically on small screens */
+                align-items: center;
+                gap: 1rem;
+            }
+            .input-layer, .hidden-layer, .output-layer {
+                width: 90%; /* Full width for layers on mobile */
+                padding: 0.75rem;
+            }
+            #drop-box {
+                width: 150px; /* Smaller drop box on mobile */
+                height: 150px;
+                font-size: 1rem;
+            }
+            .question-circle {
+                width: 100px;
+                height: 100px;
+                font-size: 0.8rem;
+            }
+            .output-box {
+                width: 80px;
+                height: 50px;
+                font-size: 0.9rem;
+            }
+            #message {
+                font-size: 1.4rem; /* Smaller message font on mobile */
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 1rem;
+            }
+            .animal-shelf {
+                flex-direction: row; /* Keep items in a row, but wrap */
+                gap: 0.75rem;
+            }
+            .animal-shelf .draggable-text {
+                width: 80px; /* Even smaller items */
+                height: 80px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Drag the Animal to Classify It!</h1>
+
+        <div class="animal-shelf">
+            <span id="cat" class="draggable-text" draggable="true">Cat</span>
+            <span id="cow" class="draggable-text" draggable="true">Cow</span>
+        </div>
+
+        <div class="neural-network-diagram">
+            <svg id="flow-arrows">
+                <defs>
+                    <marker id="arrowhead" viewBox="0 0 10 10" refX="5" refY="5"
+                        markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" />
+                    </marker>
+                </defs>
+                <line id="arrow-input-four-legs" x1="0" y1="0" x2="0" y2="0" stroke-linecap="round" marker-end="url(#arrowhead)"/>
+                <line id="arrow-input-whiskers" x1="0" y1="0" x2="0" y2="0" stroke-linecap="round" marker-end="url(#arrowhead)"/>
+                <line id="arrow-input-hooves" x1="0" y1="0" x2="0" y2="0" stroke-linecap="round" marker-end="url(#arrowhead)"/>
+
+                <line id="arrow-four-legs-cat" x1="0" y1="0" x2="0" y2="0" stroke-linecap="round" marker-end="url(#arrowhead)"/>
+                <line id="arrow-four-legs-cow" x1="0" y1="0" x2="0" y2="0" stroke-linecap="round" marker-end="url(#arrowhead)"/>
+
+                <line id="arrow-whiskers-cat" x1="0" y1="0" x2="0" y2="0" stroke-linecap="round" marker-end="url(#arrowhead)"/>
+
+                <line id="arrow-hooves-cow" x1="0" y1="0" x2="0" y2="0" stroke-linecap="round" marker-end="url(#arrowhead)"/>
+            </svg>
+
+            <div class="input-layer">
+                <div id="drop-box">
+                    <span>Drop animal here</span>
+                    </div>
+            </div>
+
+            <div class="hidden-layer">
+                <div class="question-circle" id="circle-four-legs">
+                    <span>Does the object have four legs?</span>
+                </div>
+                <div class="question-circle" id="circle-whiskers">
+                    <span>Does it have whiskers?</span>
+                </div>
+                <div class="question-circle" id="circle-hooves">
+                    <span>Does it have hooves?</span>
+                </div>
+            </div>
+
+            <div class="output-layer">
+                <div class="output-box" id="output-cat">
+                    <span>Cat</span>
+                </div>
+                <div class="output-box" id="output-cow">
+                    <span>Cow</span>
+                </div>
+            </div>
+        </div>
+
+        <p id="message"></p>
+    </div>
+
+    <script>
+        // Ensure the DOM is fully loaded before running the script
+        document.addEventListener('DOMContentLoaded', () => {
+            // Select all draggable text elements within the animal shelf
+            const draggables = document.querySelectorAll('.animal-shelf .draggable-text');
+            // Select the drop box element
+            const dropBox = document.getElementById('drop-box');
+            // Select the paragraph element to display messages
+            const messageDisplay = document.getElementById('message');
+            // Select the main diagram container for positioning reference
+            const neuralNetworkDiagram = document.querySelector('.neural-network-diagram');
+
+            // Select the hidden layer circles
+            const circleFourLegs = document.getElementById('circle-four-legs');
+            const circleWhiskers = document.getElementById('circle-whiskers');
+            const circleHooves = document.getElementById('circle-hooves');
+
+            // Select the output layer boxes
+            const outputCat = document.getElementById('output-cat');
+            const outputCow = document.getElementById('output-cow');
+
+            // Select all arrow lines (only the 4 relevant ones now)
+            const arrowInputFourLegs = document.getElementById('arrow-input-four-legs');
+            const arrowInputWhiskers = document.getElementById('arrow-input-whiskers');
+            const arrowInputHooves = document.getElementById('arrow-input-hooves');
+
+            const arrowFourLegsCat = document.getElementById('arrow-four-legs-cat');
+            const arrowFourLegsCow = document.getElementById('arrow-four-legs-cow');
+            const arrowWhiskersCat = document.getElementById('arrow-whiskers-cat');
+            const arrowHoovesCow = document.getElementById('arrow-hooves-cow');
+
+            let draggedAnimalId = null; // Variable to store the ID of the currently dragged animal
+
+            // Function to clear all glow effects from elements and arrows
+            const clearGlows = () => {
+                [circleFourLegs, circleWhiskers, circleHooves, outputCat, outputCow].forEach(el => {
+                    if (el) el.classList.remove('glow-active');
+                });
+                [arrowInputFourLegs, arrowInputWhiskers, arrowInputHooves,
+                 arrowFourLegsCat, arrowFourLegsCow, arrowWhiskersCat, arrowHoovesCow].forEach(arrow => {
+                    if (arrow) arrow.classList.remove('glow-active-arrow');
+                });
+            };
+
+            // Helper to get element's center and dimensions relative to the diagram
+            const getElementData = (element) => {
+                const rect = element.getBoundingClientRect();
+                const diagramRect = neuralNetworkDiagram.getBoundingClientRect();
+                return {
+                    x: rect.left + rect.width / 2 - diagramRect.left,
+                    y: rect.top + rect.height / 2 - diagramRect.top,
+                    width: rect.width,
+                    height: rect.height,
+                    radius: element.classList.contains('question-circle') ? rect.width / 2 : 0 // Only circles have radius
+                };
+            };
+
+            // Function to calculate point on circumference of a circle given its center and a target point
+            const getPointOnCircumference = (center, targetCenter, radius) => {
+                const dx = targetCenter.x - center.x;
+                const dy = targetCenter.y - center.y;
+                const angle = Math.atan2(dy, dx);
+                return {
+                    x: center.x + radius * Math.cos(angle),
+                    y: center.y + radius * Math.sin(angle)
+                };
+            };
+
+            // Function to draw/update arrow positions
+            const drawArrows = () => {
+                const dropBoxData = getElementData(dropBox);
+                const circleFourLegsData = getElementData(circleFourLegs);
+                const circleWhiskersData = getElementData(circleWhiskers);
+                const circleHoovesData = getElementData(circleHooves);
+                const outputCatData = getElementData(outputCat);
+                const outputCowData = getElementData(outputCow);
+
+                // Function to update arrow coordinates
+                const updateArrow = (arrowElement, startElementData, endElementData) => {
+                    if (!arrowElement || !startElementData || !endElementData) return;
+
+                    let startPoint, endPoint;
+
+                    // Calculate start point
+                    if (startElementData.radius > 0) { // Starting from a circle
+                        startPoint = getPointOnCircumference(startElementData, endElementData, startElementData.radius);
+                    } else { // Starting from a rectangle (dropBox)
+                        // For dropBox to circles, start from the right edge of the dropBox
+                        startPoint = {
+                            x: dropBoxData.x + dropBoxData.width / 2,
+                            y: dropBoxData.y + (endElementData.y - dropBoxData.y) * (dropBoxData.width / 2 / (endElementData.x - dropBoxData.x))
+                        };
+                    }
+
+                    // Calculate end point
+                    if (endElementData.radius > 0) { // Ending at a circle
+                        endPoint = getPointOnCircumference(endElementData, startElementData, endElementData.radius);
+                    } else { // Ending at a rectangle (output box)
+                        // For circles to output boxes, end at the left edge of the output box
+                        endPoint = {
+                            x: endElementData.x - endElementData.width / 2,
+                            y: endElementData.y + (startElementData.y - endElementData.y) * (endElementData.width / 2 / (startElementData.x - endElementData.x))
+                        };
+                    }
+
+                    arrowElement.setAttribute('x1', startPoint.x);
+                    arrowElement.setAttribute('y1', startPoint.y);
+                    arrowElement.setAttribute('x2', endPoint.x);
+                    arrowElement.setAttribute('y2', endPoint.y);
+                };
+
+                // Input to Hidden Layer arrows
+                updateArrow(arrowInputFourLegs, dropBoxData, circleFourLegsData);
+                updateArrow(arrowInputWhiskers, dropBoxData, circleWhiskersData);
+                updateArrow(arrowInputHooves, dropBoxData, circleHoovesData);
+
+                // Hidden Layer to Output Layer arrows (only 4 now)
+                updateArrow(arrowFourLegsCat, circleFourLegsData, outputCatData);
+                updateArrow(arrowFourLegsCow, circleFourLegsData, outputCowData);
+                updateArrow(arrowWhiskersCat, circleWhiskersData, outputCatData);
+                updateArrow(arrowHoovesCow, circleHoovesData, outputCowData);
+            };
+
+            // Initial drawing of arrows and redraw on resize
+            drawArrows();
+            window.addEventListener('resize', drawArrows);
+
+            // Add event listeners to each draggable text element
+            draggables.forEach(animal => {
+                animal.addEventListener('dragstart', (e) => {
+                    draggedAnimalId = e.target.id;
+                    e.dataTransfer.setData('text/plain', draggedAnimalId);
+                    clearGlows(); // Clear previous glows when a new drag starts
+                    messageDisplay.textContent = ''; // Clear message
+                    messageDisplay.classList.remove('correct', 'incorrect');
+                    dropBox.classList.remove('dropped'); // Reset drop box visual
+                });
+            });
+
+            // Add event listeners to the drop box
+            dropBox.addEventListener('dragover', (e) => {
+                e.preventDefault(); // Prevent default behavior to allow dropping
+                dropBox.classList.add('hover'); // Add 'hover' class for visual feedback
+            });
+
+            dropBox.addEventListener('dragleave', () => {
+                dropBox.classList.remove('hover'); // Remove 'hover' class when dragged item leaves
+            });
+
+            dropBox.addEventListener('drop', (e) => {
+                e.preventDefault(); // Prevent default browser drop behavior
+                dropBox.classList.remove('hover'); // Remove 'hover' class
+                dropBox.classList.add('dropped'); // Add 'dropped' class for styling
+
+                const droppedId = e.dataTransfer.getData('text/plain') || draggedAnimalId;
+
+                messageDisplay.classList.remove('correct', 'incorrect');
+                messageDisplay.textContent = ''; // Clear message for all drops initially
+
+                // Game logic: Check if the dropped animal is the 'cat' or 'cow'
+                if (droppedId === 'cat') {
+                    // No specific text for correct cat drop
+                    messageDisplay.classList.add('correct'); // Still apply correct styling
+
+                    // Apply glow effects for Cat
+                    if (circleFourLegs) circleFourLegs.classList.add('glow-active');
+                    if (circleWhiskers) circleWhiskers.classList.add('glow-active');
+                    if (outputCat) outputCat.classList.add('glow-active');
+
+                    // Apply glow effects to relevant arrows for Cat
+                    if (arrowInputFourLegs) arrowInputFourLegs.classList.add('glow-active-arrow');
+                    if (arrowInputWhiskers) arrowInputWhiskers.classList.add('glow-active-arrow');
+                    if (arrowFourLegsCat) arrowFourLegsCat.classList.add('glow-active-arrow');
+                    if (arrowWhiskersCat) arrowWhiskersCat.classList.add('glow-active-arrow');
+
+                } else if (droppedId === 'cow') {
+                    // No specific text for correct cow drop
+                    messageDisplay.classList.add('correct'); // Still apply correct styling
+
+                    // Apply glow effects for Cow
+                    if (circleFourLegs) circleFourLegs.classList.add('glow-active');
+                    if (circleHooves) circleHooves.classList.add('glow-active');
+                    if (outputCow) outputCow.classList.add('glow-active');
+
+                    // Apply glow effects to relevant arrows for Cow
+                    if (arrowInputFourLegs) arrowInputFourLegs.classList.add('glow-active-arrow');
+                    if (arrowInputHooves) arrowInputHooves.classList.add('glow-active-arrow');
+                    if (arrowFourLegsCow) arrowFourLegsCow.classList.add('glow-active-arrow');
+                    if (arrowHoovesCow) arrowHoovesCow.classList.add('glow-active-arrow');
+
+                } else {
+                    messageDisplay.textContent = 'Please drag a cat or a cow.';
+                    messageDisplay.classList.add('incorrect');
+                }
+            });
+
+            // Reset drop box state if drag operation ends without a drop
+            draggables.forEach(animal => {
+                animal.addEventListener('dragend', () => {
+                    dropBox.classList.remove('hover');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
