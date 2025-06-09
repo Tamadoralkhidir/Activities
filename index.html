@@ -53,34 +53,41 @@
             border: 1px solid #cbd5e0; /* Light border */
         }
 
-        /* Styles for individual draggable text elements */
-        .animal-shelf .draggable-text {
+        /* Styles for individual draggable elements (now containing images) */
+        .animal-shelf .draggable-item { /* Renamed from draggable-text for clarity */
             width: 120px; /* Fixed width */
             height: 120px;
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: #63b3ed; /* Blue background for text */
-            color: #ffffff; /* White text */
-            font-size: 1.5rem; /* Larger font for text */
-            font-weight: 600;
+            background-color: #63b3ed; /* Blue background */
             border-radius: 0.5rem; /* 8px rounded corners */
             cursor: grab; /* Indicate draggable */
             border: 3px solid transparent; /* Transparent border for hover effect */
             transition: transform 0.2s ease-in-out, border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Initial shadow */
+            padding: 0.5rem; /* Add some padding for the image */
+            box-sizing: border-box; /* Ensure padding is included in width/height */
         }
 
-        /* Hover effect for draggable text elements */
-        .animal-shelf .draggable-text:hover {
+        /* Styles for images within draggable elements */
+        .animal-shelf .draggable-item img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain; /* Ensure image fits without cropping, maintaining aspect ratio */
+            display: block; /* Remove extra space below image */
+        }
+
+        /* Hover effect for draggable elements */
+        .animal-shelf .draggable-item:hover {
             transform: translateY(-8px) scale(1.05); /* Lift and slightly enlarge */
             border-color: #3182ce; /* Darker blue border on hover */
             box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15); /* More pronounced shadow */
             background-color: #4299e1; /* Slightly darker blue on hover */
         }
 
-        /* Dragging effect for draggable text elements */
-        .animal-shelf .draggable-text:active {
+        /* Dragging effect for draggable elements */
+        .animal-shelf .draggable-item:active {
             cursor: grabbing;
             transform: scale(0.98); /* Slightly shrink when active */
         }
@@ -170,6 +177,17 @@
             transition: background-color 0.3s ease-in-out, border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Subtle initial shadow */
         }
+         /* Style for image inside drop-box */
+        #drop-box img {
+            max-width: 80%; /* Ensure image fits well within the drop box */
+            max-height: 80%;
+            object-fit: contain;
+            margin-bottom: 0.5rem; /* Space between image and text */
+        }
+        #drop-box span {
+            display: block; /* Ensure span takes full width */
+        }
+
 
         /* Hover effect for drop box */
         #drop-box.hover {
@@ -248,8 +266,9 @@
             stroke-width: 3 !important; /* Thicker stroke */
             filter: drop-shadow(0 0 5px rgba(66, 153, 225, 0.8)); /* Glow effect */
         }
-        .glow-active-arrow #arrowhead {
-            fill: #4299e1 !important; /* Blue fill for arrowhead */
+        
+        #arrowhead.glow-active-arrow-head path {
+            fill: #4299e1 !important;
         }
 
         /* Message display area */
@@ -271,6 +290,19 @@
             color: #e53e3e; /* Red */
         }
 
+        /* Explanation prompt style */
+        .explanation-prompt {
+            margin-top: 1.5rem; /* Adjusted margin */
+            padding: 1.25rem;
+            background-color: #f7fafc;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #4a5568;
+            text-align: center;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .game-container {
@@ -280,10 +312,9 @@
             h1 {
                 font-size: 1.75rem; /* Smaller heading on mobile */
             }
-            .animal-shelf .draggable-text {
+            .animal-shelf .draggable-item {
                 width: 100px; /* Smaller items on mobile */
                 height: 100px;
-                font-size: 1.2rem;
             }
             .neural-network-diagram {
                 flex-direction: column; /* Stack layers vertically on small screens */
@@ -312,6 +343,10 @@
             #message {
                 font-size: 1.4rem; /* Smaller message font on mobile */
             }
+            .explanation-prompt {
+                font-size: 1rem;
+                padding: 1rem;
+            }
         }
 
         @media (max-width: 480px) {
@@ -322,10 +357,9 @@
                 flex-direction: row; /* Keep items in a row, but wrap */
                 gap: 0.75rem;
             }
-            .animal-shelf .draggable-text {
+            .animal-shelf .draggable-item {
                 width: 80px; /* Even smaller items */
                 height: 80px;
-                font-size: 1rem;
             }
         }
     </style>
@@ -335,14 +369,20 @@
         <h1>Drag the Animal to Classify It!</h1>
 
         <div class="animal-shelf">
-            <span id="cat" class="draggable-text" draggable="true">Cat</span>
-            <span id="cow" class="draggable-text" draggable="true">Cow</span>
+            <!-- Replaced text with images -->
+            <div id="cat" class="draggable-item" draggable="true">
+                <img src="Cat.png" alt="Cat" draggable="false"> <!-- draggable="false" on img to prevent double drag image -->
+            </div>
+            <div id="cow" class="draggable-item" draggable="true">
+                <img src="Cow.png" alt="Cow" draggable="false">
+            </div>
         </div>
 
         <div class="neural-network-diagram">
             <svg id="flow-arrows">
                 <defs>
-                    <marker id="arrowhead" viewBox="0 0 10 10" refX="5" refY="5"
+                    <!-- Added class to marker for easier JS targeting -->
+                    <marker id="arrowhead" class="arrowhead-marker" viewBox="0 0 10 10" refX="5" refY="5"
                         markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                         <path d="M 0 0 L 10 5 L 0 10 z" />
                     </marker>
@@ -361,13 +401,14 @@
 
             <div class="input-layer">
                 <div id="drop-box">
-                    <span>Drop animal here</span>
+                    <!-- Initial text, will be replaced by image on drop -->
+                    <span id="drop-box-text">Drop animal here</span>
                     </div>
             </div>
 
             <div class="hidden-layer">
                 <div class="question-circle" id="circle-four-legs">
-                    <span>Does the object have four legs?</span>
+                    <span>Does it have four legs?</span>
                 </div>
                 <div class="question-circle" id="circle-whiskers">
                     <span>Does it have whiskers?</span>
@@ -388,15 +429,20 @@
         </div>
 
         <p id="message"></p>
+
+        <div class="explanation-prompt">
+            Why do you think the structure of this neural network was able to distinguish between Cat and Cow?
+        </div>
     </div>
 
     <script>
         // Ensure the DOM is fully loaded before running the script
         document.addEventListener('DOMContentLoaded', () => {
-            // Select all draggable text elements within the animal shelf
-            const draggables = document.querySelectorAll('.animal-shelf .draggable-text');
+            // Select all draggable items within the animal shelf
+            const draggables = document.querySelectorAll('.animal-shelf .draggable-item');
             // Select the drop box element
             const dropBox = document.getElementById('drop-box');
+            const dropBoxText = document.getElementById('drop-box-text'); // Get the span for text
             // Select the paragraph element to display messages
             const messageDisplay = document.getElementById('message');
             // Select the main diagram container for positioning reference
@@ -411,7 +457,7 @@
             const outputCat = document.getElementById('output-cat');
             const outputCow = document.getElementById('output-cow');
 
-            // Select all arrow lines (only the 4 relevant ones now)
+            // Select all arrow lines
             const arrowInputFourLegs = document.getElementById('arrow-input-four-legs');
             const arrowInputWhiskers = document.getElementById('arrow-input-whiskers');
             const arrowInputHooves = document.getElementById('arrow-input-hooves');
@@ -421,7 +467,12 @@
             const arrowWhiskersCat = document.getElementById('arrow-whiskers-cat');
             const arrowHoovesCow = document.getElementById('arrow-hooves-cow');
 
+            // Select the arrowhead marker definition
+            const arrowheadMarker = document.querySelector('#arrowhead.arrowhead-marker');
+
+
             let draggedAnimalId = null; // Variable to store the ID of the currently dragged animal
+            let draggedAnimalSrc = null; // Variable to store the src of the dragged image
 
             // Function to clear all glow effects from elements and arrows
             const clearGlows = () => {
@@ -432,10 +483,12 @@
                  arrowFourLegsCat, arrowFourLegsCow, arrowWhiskersCat, arrowHoovesCow].forEach(arrow => {
                     if (arrow) arrow.classList.remove('glow-active-arrow');
                 });
+                if (arrowheadMarker) arrowheadMarker.classList.remove('glow-active-arrow-head'); // Clear arrowhead glow
             };
 
             // Helper to get element's center and dimensions relative to the diagram
             const getElementData = (element) => {
+                if (!element) return null; // Check if element exists
                 const rect = element.getBoundingClientRect();
                 const diagramRect = neuralNetworkDiagram.getBoundingClientRect();
                 return {
@@ -443,20 +496,37 @@
                     y: rect.top + rect.height / 2 - diagramRect.top,
                     width: rect.width,
                     height: rect.height,
-                    radius: element.classList.contains('question-circle') ? rect.width / 2 : 0 // Only circles have radius
+                    // For circles, radius is width/2. For rectangles, it's 0 or not applicable for this calculation.
+                    radius: element.classList.contains('question-circle') ? rect.width / 2 : 0
                 };
             };
 
-            // Function to calculate point on circumference of a circle given its center and a target point
-            const getPointOnCircumference = (center, targetCenter, radius) => {
-                const dx = targetCenter.x - center.x;
-                const dy = targetCenter.y - center.y;
+            // Function to calculate point on circumference or edge
+            const getAdjustedPoint = (sourceData, targetData, isSource) => {
+                const dx = targetData.x - sourceData.x;
+                const dy = targetData.y - sourceData.y;
                 const angle = Math.atan2(dy, dx);
-                return {
-                    x: center.x + radius * Math.cos(angle),
-                    y: center.y + radius * Math.sin(angle)
-                };
+
+                let x, y;
+
+                if (sourceData.radius > 0) { // Source is a circle
+                    x = sourceData.x + sourceData.radius * Math.cos(angle);
+                    y = sourceData.y + sourceData.radius * Math.sin(angle);
+                } else { // Source is a rectangle (dropBox or outputBox)
+                    // Approximate intersection with rectangle edge
+                    const halfWidth = sourceData.width / 2;
+                    const halfHeight = sourceData.height / 2;
+                    if (Math.abs(dx) * halfHeight > Math.abs(dy) * halfWidth) { // Intersects with vertical sides
+                        x = sourceData.x + (dx > 0 ? halfWidth : -halfWidth);
+                        y = sourceData.y + (dx > 0 ? halfWidth : -halfWidth) * Math.tan(angle);
+                    } else { // Intersects with horizontal sides
+                        y = sourceData.y + (dy > 0 ? halfHeight : -halfHeight);
+                        x = sourceData.x + (dy > 0 ? halfHeight : -halfHeight) / Math.tan(angle);
+                    }
+                }
+                return { x, y };
             };
+
 
             // Function to draw/update arrow positions
             const drawArrows = () => {
@@ -471,29 +541,9 @@
                 const updateArrow = (arrowElement, startElementData, endElementData) => {
                     if (!arrowElement || !startElementData || !endElementData) return;
 
-                    let startPoint, endPoint;
+                    const startPoint = getAdjustedPoint(startElementData, endElementData, true);
+                    const endPoint = getAdjustedPoint(endElementData, startElementData, false);
 
-                    // Calculate start point
-                    if (startElementData.radius > 0) { // Starting from a circle
-                        startPoint = getPointOnCircumference(startElementData, endElementData, startElementData.radius);
-                    } else { // Starting from a rectangle (dropBox)
-                        // For dropBox to circles, start from the right edge of the dropBox
-                        startPoint = {
-                            x: dropBoxData.x + dropBoxData.width / 2,
-                            y: dropBoxData.y + (endElementData.y - dropBoxData.y) * (dropBoxData.width / 2 / (endElementData.x - dropBoxData.x))
-                        };
-                    }
-
-                    // Calculate end point
-                    if (endElementData.radius > 0) { // Ending at a circle
-                        endPoint = getPointOnCircumference(endElementData, startElementData, endElementData.radius);
-                    } else { // Ending at a rectangle (output box)
-                        // For circles to output boxes, end at the left edge of the output box
-                        endPoint = {
-                            x: endElementData.x - endElementData.width / 2,
-                            y: endElementData.y + (startElementData.y - endElementData.y) * (endElementData.width / 2 / (startElementData.x - endElementData.x))
-                        };
-                    }
 
                     arrowElement.setAttribute('x1', startPoint.x);
                     arrowElement.setAttribute('y1', startPoint.y);
@@ -506,7 +556,7 @@
                 updateArrow(arrowInputWhiskers, dropBoxData, circleWhiskersData);
                 updateArrow(arrowInputHooves, dropBoxData, circleHoovesData);
 
-                // Hidden Layer to Output Layer arrows (only 4 now)
+                // Hidden Layer to Output Layer arrows
                 updateArrow(arrowFourLegsCat, circleFourLegsData, outputCatData);
                 updateArrow(arrowFourLegsCow, circleFourLegsData, outputCowData);
                 updateArrow(arrowWhiskersCat, circleWhiskersData, outputCatData);
@@ -514,71 +564,86 @@
             };
 
             // Initial drawing of arrows and redraw on resize
-            drawArrows();
+            if (neuralNetworkDiagram && dropBox && circleFourLegs && circleWhiskers && circleHooves && outputCat && outputCow) {
+                 drawArrows();
+            }
             window.addEventListener('resize', drawArrows);
 
-            // Add event listeners to each draggable text element
-            draggables.forEach(animal => {
-                animal.addEventListener('dragstart', (e) => {
-                    draggedAnimalId = e.target.id;
+            // Add event listeners to each draggable item
+            draggables.forEach(item => {
+                item.addEventListener('dragstart', (e) => {
+                    draggedAnimalId = e.currentTarget.id; // Use currentTarget for the element the listener is attached to
+                    const imgElement = e.currentTarget.querySelector('img');
+                    if (imgElement) {
+                        draggedAnimalSrc = imgElement.src;
+                    } else {
+                        draggedAnimalSrc = null;
+                    }
                     e.dataTransfer.setData('text/plain', draggedAnimalId);
-                    clearGlows(); // Clear previous glows when a new drag starts
-                    messageDisplay.textContent = ''; // Clear message
+                    e.dataTransfer.setData('text/image-src', draggedAnimalSrc); // Store image src
+
+                    clearGlows(); // Clear previous glows
+                    messageDisplay.textContent = '';
                     messageDisplay.classList.remove('correct', 'incorrect');
-                    dropBox.classList.remove('dropped'); // Reset drop box visual
+                    dropBox.classList.remove('dropped');
+                    // Reset dropBox content to text
+                    dropBox.innerHTML = '<span id="drop-box-text">Drop animal here</span>';
                 });
             });
 
             // Add event listeners to the drop box
             dropBox.addEventListener('dragover', (e) => {
-                e.preventDefault(); // Prevent default behavior to allow dropping
-                dropBox.classList.add('hover'); // Add 'hover' class for visual feedback
+                e.preventDefault();
+                dropBox.classList.add('hover');
             });
 
             dropBox.addEventListener('dragleave', () => {
-                dropBox.classList.remove('hover'); // Remove 'hover' class when dragged item leaves
+                dropBox.classList.remove('hover');
             });
 
             dropBox.addEventListener('drop', (e) => {
-                e.preventDefault(); // Prevent default browser drop behavior
-                dropBox.classList.remove('hover'); // Remove 'hover' class
-                dropBox.classList.add('dropped'); // Add 'dropped' class for styling
+                e.preventDefault();
+                dropBox.classList.remove('hover');
+                dropBox.classList.add('dropped');
 
                 const droppedId = e.dataTransfer.getData('text/plain') || draggedAnimalId;
+                const droppedImgSrc = e.dataTransfer.getData('text/image-src') || draggedAnimalSrc;
+
+                // Display the dropped image in the dropBox
+                if (droppedImgSrc) {
+                    dropBox.innerHTML = `<img src="${droppedImgSrc}" alt="${droppedId}"><span id="drop-box-text">${droppedId.charAt(0).toUpperCase() + droppedId.slice(1)}</span>`;
+                } else {
+                     dropBox.innerHTML = `<span id="drop-box-text">${droppedId ? droppedId.charAt(0).toUpperCase() + droppedId.slice(1) : 'Animal'}</span>`;
+                }
+                drawArrows(); // Redraw arrows as dropBox content/size might change slightly
 
                 messageDisplay.classList.remove('correct', 'incorrect');
-                messageDisplay.textContent = ''; // Clear message for all drops initially
+                messageDisplay.textContent = '';
 
-                // Game logic: Check if the dropped animal is the 'cat' or 'cow'
                 if (droppedId === 'cat') {
-                    // No specific text for correct cat drop
-                    messageDisplay.classList.add('correct'); // Still apply correct styling
-
+                    messageDisplay.classList.add('correct');
                     // Apply glow effects for Cat
                     if (circleFourLegs) circleFourLegs.classList.add('glow-active');
                     if (circleWhiskers) circleWhiskers.classList.add('glow-active');
                     if (outputCat) outputCat.classList.add('glow-active');
-
-                    // Apply glow effects to relevant arrows for Cat
                     if (arrowInputFourLegs) arrowInputFourLegs.classList.add('glow-active-arrow');
                     if (arrowInputWhiskers) arrowInputWhiskers.classList.add('glow-active-arrow');
                     if (arrowFourLegsCat) arrowFourLegsCat.classList.add('glow-active-arrow');
                     if (arrowWhiskersCat) arrowWhiskersCat.classList.add('glow-active-arrow');
+                    if (arrowheadMarker) arrowheadMarker.classList.add('glow-active-arrow-head');
+
 
                 } else if (droppedId === 'cow') {
-                    // No specific text for correct cow drop
-                    messageDisplay.classList.add('correct'); // Still apply correct styling
-
+                    messageDisplay.classList.add('correct');
                     // Apply glow effects for Cow
                     if (circleFourLegs) circleFourLegs.classList.add('glow-active');
                     if (circleHooves) circleHooves.classList.add('glow-active');
                     if (outputCow) outputCow.classList.add('glow-active');
-
-                    // Apply glow effects to relevant arrows for Cow
                     if (arrowInputFourLegs) arrowInputFourLegs.classList.add('glow-active-arrow');
                     if (arrowInputHooves) arrowInputHooves.classList.add('glow-active-arrow');
                     if (arrowFourLegsCow) arrowFourLegsCow.classList.add('glow-active-arrow');
                     if (arrowHoovesCow) arrowHoovesCow.classList.add('glow-active-arrow');
+                    if (arrowheadMarker) arrowheadMarker.classList.add('glow-active-arrow-head');
 
                 } else {
                     messageDisplay.textContent = 'Please drag a cat or a cow.';
@@ -586,12 +651,17 @@
                 }
             });
 
-            // Reset drop box state if drag operation ends without a drop
-            draggables.forEach(animal => {
-                animal.addEventListener('dragend', () => {
-                    dropBox.classList.remove('hover');
-                });
-            });
+            // Reset drop box state if drag operation ends without a drop (e.g., dropped outside)
+            document.addEventListener('dragend', (e) => { // Listen on document for robust dragend
+                if (!dropBox.contains(e.target) || !e.target.closest('.draggable-item')) { // if drag ended outside a valid drop or not on a draggable
+                     // Check if it was actually dropped on the dropBox in the drop event
+                    if (!dropBox.classList.contains('dropped')) {
+                         dropBox.innerHTML = '<span id="drop-box-text">Drop animal here</span>'; // Reset if not successfully dropped
+                         clearGlows();
+                    }
+                }
+                dropBox.classList.remove('hover'); // Always remove hover
+            }, false);
         });
     </script>
 </body>
